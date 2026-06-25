@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>LogiRoute — Optimasi Muatan & Rute Distribusi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { heading: ['Space Grotesk', 'sans-serif'] },
+                    colors: {
+                        base: { 50:'#f0fdf4', 100:'#dcfce7', 200:'#bbf7d0', 300:'#86efac', 400:'#4ade80', 500:'#22c55e', 600:'#16a34a', 700:'#15803d', 800:'#166534', 900:'#14532d' },
+                        surface: { 900:'#070d1a', 800:'#0b1120', 700:'#111a2e', 600:'#182240', 500:'#1e2d4f' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --accent: #22c55e;
+            --accent-glow: rgba(34,197,94,0.25);
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --blue: #3b82f6;
+            --violet: #8b5cf6;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', system-ui, sans-serif; background: #070d1a; color: #e2e8f0; }
+        .glass { background: rgba(11,17,32,0.7); backdrop-filter: blur(16px); border: 1px solid rgba(148,163,184,0.08); }
+        .glass-light { background: rgba(17,26,46,0.6); backdrop-filter: blur(8px); border: 1px solid rgba(148,163,184,0.06); }
+        .glow-green { box-shadow: 0 0 30px var(--accent-glow), 0 0 60px rgba(34,197,94,0.08); }
+        .glow-amber { box-shadow: 0 0 30px rgba(245,158,11,0.2); }
+        .glow-text { text-shadow: 0 0 40px var(--accent-glow); }
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 600px 400px at 15% 20%, rgba(34,197,94,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 500px at 85% 80%, rgba(245,158,11,0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 300px at 50% 50%, rgba(59,130,246,0.03) 0%, transparent 70%);
+        }
+        .card-hover { transition: transform 0.25s, box-shadow 0.25s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse-ring { 0% { transform:scale(1); opacity:0.6; } 100% { transform:scale(2.2); opacity:0; } }
+        .pulse-dot::before { content:''; position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--accent); animation: pulse-ring 2s ease-out infinite; }
+        .stat-number { font-variant-numeric: tabular-nums; }
+        input[type=number] { -moz-appearance: textfield; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+        .truck-jkt1 { --truck-color: #22c55e; }
+        .truck-jkt2 { --truck-color: #3b82f6; }
+        .truck-sby1 { --truck-color: #f59e0b; }
+        .truck-sby2 { --truck-color: #f43f5e; }
+        .truck-badge { background: var(--truck-color); }
+        .scroll-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+        .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+        .scroll-thin::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 4px; }
+        #graph-canvas { image-rendering: auto; }
+        .loader { border: 3px solid rgba(148,163,184,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+            .fade-in { animation: none; }
+            .pulse-dot::before { animation: none; }
+            .loader { animation: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="bg-mesh"></div>
+
+    <div class="relative z-10">
+        <!-- HEADER -->
+        <header class="border-b border-slate-800/60 glass">
+            <div class="max-w-360 mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-700 flex items-center justify-center">
+                        <i class="fas fa-route text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">LogiRoute <span class="text-green-400">Optimizer</span></h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">Optimasi Muatan & Rute Distribusi Logistik</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <span class="hidden md:inline">GA + ACO Hybrid</span>
+                    <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN -->
+        <main class="max-w-360 mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+            <!-- SECTION: Peta Jaringan Kota -->
+            <section class="glass rounded-2xl p-4 sm:p-6 fade-in">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-map-marked-alt text-green-400"></i>
+                    <h2 class="text-base font-semibold text-white">Peta Jaringan Kota</h2>
+                </div>
+                <div class="overflow-x-auto scroll-thin">
+                    <canvas id="graph-canvas" width="680" height="400" class="mx-auto rounded-xl" style="min-width:680px;"></canvas>
+                </div>
+                <div id="route-legend" class="mt-3 flex flex-wrap gap-3 text-xs">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:#22c55e"></span> Truk JKT-1</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:#3b82f6"></span> Truk JKT-2</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:#f59e0b"></span> Truk SBY-1</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:#f43f5e"></span> Truk SBY-2</span>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- LEFT COLUMN: Input -->
+                <div class="lg:col-span-7 space-y-6">
+
+                    <!-- SECTION: Data Barang -->
+                    <section class="glass rounded-2xl p-4 sm:p-6 fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-boxes-stacked text-amber-400"></i>
+                                <h2 class="text-base font-semibold text-white">Data Barang</h2>
+                                <span id="item-count" class="text-xs bg-surface-600 text-slate-400 px-2 py-0.5 rounded-full">0 item</span>
+                            </div>
+                            <button onclick="addItemRow()" class="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-lg hover:bg-green-500/20 transition">
+                                <i class="fas fa-plus mr-1"></i> Tambah
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto scroll-thin">
+                            <table class="w-full text-xs min-w-200">
+                                <thead>
+                                    <tr class="text-slate-500 border-b border-slate-800/60">
+                                        <th class="text-left py-2 px-1.5 w-8">#</th>
+                                        <th class="text-left py-2 px-1.5">Nama Barang</th>
+                                        <th class="text-left py-2 px-1.5 w-20">Berat (kg)</th>
+                                        <th class="text-left py-2 px-1.5 w-28">Asal</th>
+                                        <th class="text-left py-2 px-1.5 w-28">Tujuan</th>
+                                        <th class="text-center py-2 px-1">P (cm)</th>
+                                        <th class="text-center py-2 px-1">L (cm)</th>
+                                        <th class="text-center py-2 px-1">T (cm)</th>
+                                        <th class="text-center py-2 px-1">Volume</th>
+                                        <th class="text-center py-2 px-1">Kategori</th>
+                                        <th class="text-center py-2 px-1 w-8"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-tbody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- SECTION: Parameter -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- GA Params -->
+                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="fas fa-dna text-violet-400"></i>
+                                <h2 class="text-sm font-semibold text-white">Parameter GA</h2>
+                            </div>
+                            <div class="space-y-3 text-xs">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Populasi</label>
+                                    <input type="number" id="ga-pop" value="50" min="10" max="200" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Iterasi</label>
+                                    <input type="number" id="ga-iter" value="100" min="10" max="500" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Elitism</label>
+                                    <input type="number" id="ga-elite" value="2" min="1" max="10" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Crossover Rate</label>
+                                    <input type="number" id="ga-pc" value="0.8" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Mutation Rate</label>
+                                    <input type="number" id="ga-pm" value="0.2" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ACO Params -->
+                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="fas fa-bug text-green-400"></i>
+                                <h2 class="text-sm font-semibold text-white">Parameter ACO</h2>
+                            </div>
+                            <div class="space-y-3 text-xs">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Jumlah Semut</label>
+                                    <input type="number" id="aco-ants" value="5" min="2" max="50" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Iterasi ACO</label>
+                                    <input type="number" id="aco-iter" value="15" min="5" max="200" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Alpha (feromon)</label>
+                                    <input type="number" id="aco-alpha" value="1.0" min="0" max="5" step="0.1" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Beta (jarak)</label>
+                                    <input type="number" id="aco-beta" value="2.0" min="0" max="5" step="0.1" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">Rho (evaporasi)</label>
+                                    <input type="number" id="aco-rho" value="0.5" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-slate-400">q0 (eksploitasi)</label>
+                                    <input type="number" id="aco-q0" value="0.7" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- RUN BUTTON -->
+                    <button id="run-btn" onclick="runOptimization()" class="w-full py-4 rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold text-sm tracking-wide transition-all glow-green flex items-center justify-center gap-2 active:scale-[0.98]">
+                        <i class="fas fa-play"></i>
+                        <span>Jalankan Optimasi</span>
+                    </button>
+                </div>
+
+                <!-- RIGHT COLUMN: Matriks Jarak -->
+                <div class="lg:col-span-5 space-y-6">
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-table-cells text-blue-400"></i>
+                            <h2 class="text-sm font-semibold text-white">Matriks Jarak (km)</h2>
+                            <span class="text-[10px] text-slate-500">Dijkstra</span>
+                        </div>
+                        <div class="overflow-x-auto scroll-thin">
+                            <table id="distance-matrix" class="w-full text-[10px] min-w-125"></table>
+                        </div>
+                    </section>
+
+                    <!-- Info Kapasitas -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-truck text-green-400"></i>
+                            <h2 class="text-sm font-semibold text-white">Armada Kendaraan</h2>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="fleet-info">
+                            <div class="glass-light rounded-xl p-3 truck-jkt1">
+                                <div class="truck-badge w-fit text-[10px] text-white font-semibold px-2 py-0.5 rounded mb-2">JKT-1</div>
+                                <div class="text-xs text-slate-400">Gudang: Jakarta</div>
+                                <div class="text-xs text-slate-400 mt-1">Berat: <span class="text-slate-200">1.000 kg</span></div>
+                                <div class="text-xs text-slate-400">Volume: <span class="text-slate-200">9.000.000 cm³</span></div>
+                            </div>
+                            <div class="glass-light rounded-xl p-3 truck-jkt2">
+                                <div class="truck-badge w-fit text-[10px] text-white font-semibold px-2 py-0.5 rounded mb-2">JKT-2</div>
+                                <div class="text-xs text-slate-400">Gudang: Jakarta</div>
+                                <div class="text-xs text-slate-400 mt-1">Berat: <span class="text-slate-200">1.000 kg</span></div>
+                                <div class="text-xs text-slate-400">Volume: <span class="text-slate-200">9.000.000 cm³</span></div>
+                            </div>
+                            <div class="glass-light rounded-xl p-3 truck-sby1">
+                                <div class="truck-badge w-fit text-[10px] text-white font-semibold px-2 py-0.5 rounded mb-2">SBY-1</div>
+                                <div class="text-xs text-slate-400">Gudang: Surabaya</div>
+                                <div class="text-xs text-slate-400 mt-1">Berat: <span class="text-slate-200">1.000 kg</span></div>
+                                <div class="text-xs text-slate-400">Volume: <span class="text-slate-200">9.000.000 cm³</span></div>
+                            </div>
+                            <div class="glass-light rounded-xl p-3 truck-sby2">
+                                <div class="truck-badge w-fit text-[10px] text-white font-semibold px-2 py-0.5 rounded mb-2">SBY-2</div>
+                                <div class="text-xs text-slate-400">Gudang: Surabaya</div>
+                                <div class="text-xs text-slate-400 mt-1">Berat: <span class="text-slate-200">1.000 kg</span></div>
+                                <div class="text-xs text-slate-400">Volume: <span class="text-slate-200">9.000.000 cm³</span></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Info Kategori -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-tags text-amber-400"></i>
+                            <h2 class="text-sm font-semibold text-white">Kategori Dimensi</h2>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center justify-between glass-light rounded-lg px-3 py-2">
+                                <span class="text-green-400 font-medium">Kecil</span>
+                                <span class="text-slate-400">≤ 125.000 cm³</span>
+                                <span class="text-slate-200 font-mono">×100</span>
+                            </div>
+                            <div class="flex items-center justify-between glass-light rounded-lg px-3 py-2">
+                                <span class="text-amber-400 font-medium">Sedang</span>
+                                <span class="text-slate-400">125.001 – 1.000.000 cm³</span>
+                                <span class="text-slate-200 font-mono">×200</span>
+                            </div>
+                            <div class="flex items-center justify-between glass-light rounded-lg px-3 py-2">
+                                <span class="text-rose-400 font-medium">Besar</span>
+                                <span class="text-slate-400">1.000.001 – 4.500.000 cm³</span>
+                                <span class="text-slate-200 font-mono">×300</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-[10px] text-slate-500 space-y-0.5">
+                            <div><i class="fas fa-calculator mr-1"></i> Pendapatan = Berat × Jarak × Kategori</div>
+                            <div><i class="fas fa-gas-pump mr-1"></i> BBM = (Jarak ÷ 4 km/L) × Rp 6.800/L</div>
+                            <div><i class="fas fa-coins mr-1"></i> Profit = Pendapatan − BBM</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- RESULTS SECTION (hidden) -->
+            <div id="results-section" class="hidden space-y-6">
+                <div class="border-t border-slate-800/60 pt-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <i class="fas fa-chart-line text-green-400 text-sm"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-white">Hasil Optimasi</h2>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="summary-cards"></div>
+
+                    <!-- Convergence + ACO Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-chart-area text-violet-400 text-sm"></i>
+                                <h3 class="text-sm font-semibold text-white">Konvergensi GA</h3>
+                            </div>
+                            <div class="relative" style="height:280px;">
+                                <canvas id="convergence-chart"></canvas>
+                            </div>
+                        </section>
+                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-bug text-green-400 text-sm"></i>
+                                <h3 class="text-sm font-semibold text-white">Konvergensi ACO (Final)</h3>
+                            </div>
+                            <div class="relative" style="height:280px;">
+                                <canvas id="aco-chart"></canvas>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Perbandingan -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in mb-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-scale-balanced text-amber-400 text-sm"></i>
+                            <h3 class="text-sm font-semibold text-white">Perbandingan Awal vs Akhir</h3>
+                        </div>
+                        <div id="comparison-table" class="overflow-x-auto scroll-thin"></div>
+                    </section>
+
+                    <!-- Truck Details -->
+                    <div id="truck-details" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"></div>
+
+                    <!-- Chromosome Info -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-barcode text-blue-400 text-sm"></i>
+                            <h3 class="text-sm font-semibold text-white">Kromosom Terbaik</h3>
+                        </div>
+                        <div id="chromosome-display" class="flex flex-wrap gap-1.5"></div>
+                        <div id="skipped-info" class="mt-3 hidden text-xs text-rose-400">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> <span></span>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="border-t border-slate-800/40 mt-12 py-6 text-center text-xs text-slate-600">
+            LogiRoute Optimizer — Genetic Algorithm + Ant Colony Optimization
+        </footer>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex-col items-center justify-center gap-4 hidden" style="display:none;">
+        <div class="loader"></div>
+        <p class="text-sm text-slate-300" id="loading-text">Menjalankan optimasi...</p>
+        <p class="text-xs text-slate-500" id="loading-sub">GA + ACO sedang memproses data</p>
+    </div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA DARI SERVER
+// ═══════════════════════════════════════════════════════════
+const CITIES = @json($cities);
+const EDGES = @json($edges);
+const DIST_MATRIX = @json($distMatrix);
+const DEFAULT_ITEMS = @json($itemsWithCategory);
+
+const WAREHOUSES = ['Jakarta', 'Surabaya'];
+const TRUCK_COLORS = { 1:'#22c55e', 2:'#3b82f6', 3:'#f59e0b', 4:'#f43f5e' };
+const TRUCK_NAMES = { 1:'Truk JKT-1', 2:'Truk JKT-2', 3:'Truk SBY-1', 4:'Truk SBY-2' };
+
+// Koordinat kota untuk visualisasi (perkiraan relatif)
+const CITY_COORDS = {
+    'Jakarta':     { x: 70,  y: 195 },
+    'Bandung':     { x: 50,  y: 285 },
+    'Cirebon':     { x: 185, y: 150 },
+    'Tasikmalaya': { x: 145, y: 330 },
+    'Semarang':    { x: 340, y: 95  },
+    'Yogyakarta':  { x: 295, y: 300 },
+    'Solo':        { x: 395, y: 275 },
+    'Surabaya':    { x: 530, y: 225 },
+    'Malang':      { x: 575, y: 315 },
+};
+
+let convergenceChart = null;
+let acoChart = null;
+let itemCounter = 0;
+
+// ═══════════════════════════════════════════════════════════
+// INISIALISASI
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    buildDistanceMatrix();
+    drawGraph();
+    loadDefaultItems();
+});
+
+// ═══════════════════════════════════════════════════════════
+// MATRIKS JARAK
+// ═══════════════════════════════════════════════════════════
+function buildDistanceMatrix() {
+    const table = document.getElementById('distance-matrix');
+    let html = '<thead><tr><th class="py-1.5 px-1 text-slate-500 text-left"></th>';
+    CITIES.forEach(c => { html += `<th class="py-1.5 px-1 text-slate-400 text-center whitespace-nowrap">${c}</th>`; });
+    html += '</tr></thead><tbody>';
+    CITIES.forEach(a => {
+        html += `<tr><td class="py-1.5 px-1 text-slate-300 font-medium whitespace-nowrap">${a}</td>`;
+        CITIES.forEach(b => {
+            const v = DIST_MATRIX[a]?.[b];
+            if (v === 0) html += '<td class="py-1.5 px-1 text-center text-slate-600">—</td>';
+            else if (v === Infinity || v === null) html += '<td class="py-1.5 px-1 text-center text-rose-500">∞</td>';
+            else html += `<td class="py-1.5 px-1 text-center text-slate-300">${v.toLocaleString('id-ID')}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GRAPH CANVAS
+// ═══════════════════════════════════════════════════════════
+function drawGraph(truckRoutes = null) {
+    const canvas = document.getElementById('graph-canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 680 * dpr;
+    canvas.height = 400 * dpr;
+    ctx.scale(dpr, dpr);
+    canvas.style.width = '680px';
+    canvas.style.height = '400px';
+
+    // Background
+    ctx.fillStyle = '#080e1c';
+    ctx.fillRect(0, 0, 680, 400);
+
+    // Grid dots
+    ctx.fillStyle = 'rgba(148,163,184,0.04)';
+    for (let x = 0; x < 680; x += 20) {
+        for (let y = 0; y < 400; y += 20) {
+            ctx.beginPath();
+            ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Edges
+    EDGES.forEach(e => {
+        const a = CITY_COORDS[e.from], b = CITY_COORDS[e.to];
+        if (!a || !b) return;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = 'rgba(148,163,184,0.12)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Label jarak
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        ctx.font = '9px Space Grotesk, sans-serif';
+        ctx.fillStyle = 'rgba(148,163,184,0.35)';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.weight + ' km', mx, my - 4);
+    });
+
+    // Truck routes
+    if (truckRoutes) {
+        Object.entries(truckRoutes).forEach(([mId, data]) => {
+            if (!data.route || data.route.length < 2) return;
+            const color = TRUCK_COLORS[mId] || '#888';
+            ctx.beginPath();
+            ctx.moveTo(CITY_COORDS[data.route[0]].x, CITY_COORDS[data.route[0]].y);
+            for (let i = 1; i < data.route.length; i++) {
+                const p = CITY_COORDS[data.route[i]];
+                if (!p) continue;
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3.5;
+            ctx.globalAlpha = 0.7;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // Arrow di setiap segmen
+            for (let i = 0; i < data.route.length - 1; i++) {
+                const from = CITY_COORDS[data.route[i]], to = CITY_COORDS[data.route[i + 1]];
+                if (!from || !to) continue;
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
+                ctx.save();
+                ctx.translate(mx, my);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(6, 0);
+                ctx.lineTo(-4, -4);
+                ctx.lineTo(-4, 4);
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.9;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.restore();
+            }
+        });
+        document.getElementById('route-legend').classList.remove('hidden');
+    } else {
+        document.getElementById('route-legend').classList.add('hidden');
+    }
+
+    // City nodes
+    CITIES.forEach(city => {
+        const p = CITY_COORDS[city];
+        if (!p) return;
+        const isWH = WAREHOUSES.includes(city);
+
+        // Glow
+        if (isWH) {
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 20);
+            grad.addColorStop(0, 'rgba(34,197,94,0.25)');
+            grad.addColorStop(1, 'rgba(34,197,94,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Circle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, isWH ? 7 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = isWH ? '#22c55e' : '#334155';
+        ctx.fill();
+        ctx.strokeStyle = isWH ? '#22c55e' : '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Label
+        ctx.font = `${isWH ? '600 11' : '10'}px Space Grotesk, sans-serif`;
+        ctx.fillStyle = isWH ? '#e2e8f0' : '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText(city, p.x, p.y + (isWH ? 20 : 16));
+
+        if (isWH) {
+            ctx.font = '8px Space Grotesk, sans-serif';
+            ctx.fillStyle = '#22c55e';
+            ctx.fillText('GUDANG', p.x, p.y + 28);
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ITEM MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+function getCategory(vol) {
+    if (vol <= 125000) return { val: 100, label: 'Kecil', cls: 'text-green-400 bg-green-400/10' };
+    if (vol <= 1000000) return { val: 200, label: 'Sedang', cls: 'text-amber-400 bg-amber-400/10' };
+    return { val: 300, label: 'Besar', cls: 'text-rose-400 bg-rose-400/10' };
+}
+
+function cityOptions(selected, onlyWarehouses = false) {
+    const list = onlyWarehouses ? WAREHOUSES : CITIES;
+    return list.map(c => `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+function addItemRow(data = null) {
+    itemCounter++;
+    const idx = itemCounter;
+    const d = data || { name:'', weight:'', origin:'Jakarta', destination:'Semarang', length:'', width:'', height:'' };
+    const tbody = document.getElementById('items-tbody');
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${idx}`;
+    tr.className = 'border-b border-slate-800/40 hover:bg-slate-800/20 transition';
+    tr.innerHTML = `
+        <td class="py-1.5 px-1.5 text-slate-500">${idx}</td>
+        <td class="py-1.5 px-1.5"><input type="text" value="${d.name}" data-field="name" class="w-full bg-transparent border-b border-slate-700 focus:border-green-500/50 py-0.5 text-slate-200 focus:outline-none text-xs" placeholder="Nama"></td>
+        <td class="py-1.5 px-1.5"><input type="number" value="${d.weight}" data-field="weight" class="w-full bg-transparent border-b border-slate-700 focus:border-green-500/50 py-0.5 text-slate-200 focus:outline-none text-xs text-right" placeholder="0"></td>
+        <td class="py-1.5 px-1.5"><select data-field="origin" class="w-full bg-surface-600 border border-slate-700 rounded px-1 py-1 text-slate-200 text-xs appearance-none pr-5">${cityOptions(d.origin, true)}</select></td>
+        <td class="py-1.5 px-1.5"><select data-field="destination" class="w-full bg-surface-600 border border-slate-700 rounded px-1 py-1 text-slate-200 text-xs appearance-none pr-5">${cityOptions(d.destination)}</select></td>
+        <td class="py-1.5 px-1"><input type="number" value="${d.length}" data-field="length" class="w-full bg-transparent border-b border-slate-700 focus:border-green-500/50 py-0.5 text-slate-200 focus:outline-none text-xs text-center" placeholder="0" oninput="updateVolume(this)"></td>
+        <td class="py-1.5 px-1"><input type="number" value="${d.width}" data-field="width" class="w-full bg-transparent border-b border-slate-700 focus:border-green-500/50 py-0.5 text-slate-200 focus:outline-none text-xs text-center" placeholder="0" oninput="updateVolume(this)"></td>
+        <td class="py-1.5 px-1"><input type="number" value="${d.height}" data-field="height" class="w-full bg-transparent border-b border-slate-700 focus:border-green-500/50 py-0.5 text-slate-200 focus:outline-none text-xs text-center" placeholder="0" oninput="updateVolume(this)"></td>
+        <td class="py-1.5 px-1 text-center text-slate-500 vol-cell">${d.length && d.width && d.height ? (parseInt(d.length)*parseInt(d.width)*parseInt(d.height)).toLocaleString('id-ID') : '—'}</td>
+        <td class="py-1.5 px-1 text-center"><span class="cat-cell text-[10px] px-1.5 py-0.5 rounded">${d.length && d.width && d.height ? getCategory(parseInt(d.length)*parseInt(d.width)*parseInt(d.height)).label : '—'}</span></td>
+        <td class="py-1.5 px-1 text-center"><button onclick="removeItemRow(${idx})" class="text-slate-600 hover:text-rose-400 transition"><i class="fas fa-xmark"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    updateItemCount();
+}
+
+function removeItemRow(idx) {
+    const row = document.getElementById(`item-row-${idx}`);
+    if (row) { row.remove(); updateItemCount(); }
+}
+
+function updateVolume(el) {
+    const tr = el.closest('tr');
+    const p = parseInt(tr.querySelector('[data-field="length"]')?.value) || 0;
+    const l = parseInt(tr.querySelector('[data-field="width"]')?.value) || 0;
+    const t = parseInt(tr.querySelector('[data-field="height"]')?.value) || 0;
+    const vol = p * l * t;
+    const cat = getCategory(vol);
+    tr.querySelector('.vol-cell').textContent = vol > 0 ? vol.toLocaleString('id-ID') : '—';
+    const catCell = tr.querySelector('.cat-cell');
+    catCell.textContent = vol > 0 ? cat.label : '—';
+    catCell.className = `cat-cell text-[10px] px-1.5 py-0.5 rounded ${vol > 0 ? cat.cls : ''}`;
+}
+
+function updateItemCount() {
+    const count = document.querySelectorAll('#items-tbody tr').length;
+    document.getElementById('item-count').textContent = `${count} item`;
+}
+
+function loadDefaultItems() {
+    DEFAULT_ITEMS.forEach(item => {
+        // Cari faktor P×L×T dari volume (gunakan perkiraan)
+        const v = item.volume;
+        let p = 0, l = 0, t = 0;
+        if (v === 350000) { p=70; l=50; t=100; }
+        else if (v === 900000) { p=120; l=60; t=125; }
+        else if (v === 1800000) { p=100; l=90; t=200; }
+        else if (v === 2800000) { p=140; l=100; t=200; }
+        else if (v === 2000000) { p=200; l=100; t=100; }
+        else if (v === 2400000) { p=120; l=100; t=200; }
+        else if (v === 120000) { p=60; l=40; t=50; }
+        else if (v === 180000) { p=60; l=50; t=60; }
+        else if (v === 600000) { p=100; l=60; t=100; }
+        else if (v === 750000) { p=100; l=75; t=100; }
+        else if (v === 700000) { p=70; l=100; t=100; }
+        else if (v === 500000) { p=80; l=80; t=78; }
+        else if (v === 90000) { p=30; l=30; t=100; }
+        else if (v === 2200000) { p=110; l=100; t=200; }
+        else if (v === 300000) { p=60; l=50; t=100; }
+        else if (v === 800000) { p=100; l=80; t=100; }
+        else if (v === 80000) { p=40; l=40; t=50; }
+        else if (v === 400000) { p=80; l=50; t=100; }
+        else { p = Math.round(Math.cbrt(v)); l = p; t = p; }
+
+        addItemRow({
+            name: item.name,
+            weight: item.weight,
+            origin: item.origin,
+            destination: item.destination,
+            length: p,
+            width: l,
+            height: t
+        });
+    });
+}
+
+function collectItems() {
+    const rows = document.querySelectorAll('#items-tbody tr');
+    const items = [];
+    let valid = true;
+    rows.forEach(tr => {
+        const name = tr.querySelector('[data-field="name"]')?.value?.trim();
+        const weight = parseFloat(tr.querySelector('[data-field="weight"]')?.value) || 0;
+        const origin = tr.querySelector('[data-field="origin"]')?.value;
+        const destination = tr.querySelector('[data-field="destination"]')?.value;
+        const length = parseInt(tr.querySelector('[data-field="length"]')?.value) || 0;
+        const width = parseInt(tr.querySelector('[data-field="width"]')?.value) || 0;
+        const height = parseInt(tr.querySelector('[data-field="height"]')?.value) || 0;
+
+        if (!name || weight <= 0 || !origin || !destination || length <= 0 || width <= 0 || height <= 0) {
+            valid = false;
+            tr.style.background = 'rgba(244,63,94,0.08)';
+            setTimeout(() => { tr.style.background = ''; }, 2000);
+            return;
+        }
+        items.push({ name, weight, origin, destination, length, width, height });
+    });
+    return valid ? items : null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// OPTIMIZATION
+// ═══════════════════════════════════════════════════════════
+function formatRp(n) {
+    if (n === 0) return 'Rp 0';
+    const abs = Math.abs(n);
+    const prefix = n < 0 ? '-Rp ' : 'Rp ';
+    if (abs >= 1e9) return prefix + (abs / 1e9).toFixed(2) + ' M';
+    if (abs >= 1e6) return prefix + (abs / 1e6).toFixed(1) + ' Jt';
+    return prefix + abs.toLocaleString('id-ID');
+}
+
+function formatNum(n) {
+    return n.toLocaleString('id-ID', { maximumFractionDigits: 1 });
+}
+
+async function runOptimization() {
+    const items = collectItems();
+    if (!items || items.length === 0) {
+        showToast('Lengkapi semua data barang sebelum menjalankan optimasi.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loader" style="width:20px;height:20px;border-width:2px;"></div><span>Memproses...</span>';
+
+    showLoading(true, 'Menjalankan Genetic Algorithm...', 'Evolusi populasi dengan ' + document.getElementById('ga-pop').value + ' kromosom');
+
+    const payload = {
+        items: items,
+        ga: {
+            pop_size: parseInt(document.getElementById('ga-pop').value),
+            n_iter: parseInt(document.getElementById('ga-iter').value),
+            elite_size: parseInt(document.getElementById('ga-elite').value),
+            pc: parseFloat(document.getElementById('ga-pc').value),
+            pm: parseFloat(document.getElementById('ga-pm').value),
+        },
+        aco: {
+            num_ants: parseInt(document.getElementById('aco-ants').value),
+            max_iter: parseInt(document.getElementById('aco-iter').value),
+            alpha: parseFloat(document.getElementById('aco-alpha').value),
+            beta: parseFloat(document.getElementById('aco-beta').value),
+            rho: parseFloat(document.getElementById('aco-rho').value),
+            q0: parseFloat(document.getElementById('aco-q0').value),
+            Q: 100,
+            init_pheromone: 0.1,
+        }
+    };
+
+    try {
+        const resp = await fetch('/optimize', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        updateLoadingText('Menjalankan ACO final...', 'Optimasi rute untuk setiap truk');
+
+        const result = await resp.json();
+
+        if (!result.success) {
+            showToast(result.message || 'Terjadi kesalahan.', 'error');
+            resetBtn();
+            return;
+        }
+
+        updateLoadingText('Menyusun hasil...', 'Hampir selesai');
+        await new Promise(r => setTimeout(r, 300));
+
+        renderResults(result.data);
+        showLoading(false);
+        showToast('Optimasi selesai! Profit: ' + formatRp(result.data.profit), 'success');
+
+        // Scroll ke hasil
+        setTimeout(() => {
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
+
+    } catch (e) {
+        showToast('Gagal menghubungi server: ' + e.message, 'error');
+        showLoading(false);
+    }
+
+    resetBtn();
+}
+
+function resetBtn() {
+    const btn = document.getElementById('run-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-play"></i><span>Jalankan Optimasi</span>';
+}
+
+function showLoading(show, text, sub) {
+    const el = document.getElementById('loading-overlay');
+    if (show) {
+        el.style.display = 'flex';
+        if (text) document.getElementById('loading-text').textContent = text;
+        if (sub) document.getElementById('loading-sub').textContent = sub;
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+function updateLoadingText(text, sub) {
+    document.getElementById('loading-text').textContent = text;
+    if (sub) document.getElementById('loading-sub').textContent = sub;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════════════════════
+function renderResults(data) {
+    const section = document.getElementById('results-section');
+    section.classList.remove('hidden');
+    section.classList.add('fade-in');
+
+    renderSummaryCards(data);
+    renderConvergenceChart(data.convergence);
+    renderACOChart(data.aco_details);
+    renderComparison(data);
+    renderTruckDetails(data.trucks);
+    renderChromosome(data.best_chromosome, data.skipped);
+    drawGraph(data.trucks);
+}
+
+function renderSummaryCards(data) {
+    const cards = [
+        { label: 'Profit Bersih', value: formatRp(data.profit), icon: 'fa-coins', color: 'text-green-400', bg: 'from-green-500/10 to-emerald-500/5', border: 'border-green-500/20' },
+        { label: 'Pendapatan Kotor', value: formatRp(data.total_revenue), icon: 'fa-money-bill-trend-up', color: 'text-amber-400', bg: 'from-amber-500/10 to-yellow-500/5', border: 'border-amber-500/20' },
+        { label: 'Biaya BBM', value: formatRp(data.total_fuel_cost), icon: 'fa-gas-pump', color: 'text-rose-400', bg: 'from-rose-500/10 to-red-500/5', border: 'border-rose-500/20' },
+        { label: 'Total Jarak', value: formatNum(data.total_distance) + ' km', icon: 'fa-road', color: 'text-blue-400', bg: 'from-blue-500/10 to-indigo-500/5', border: 'border-blue-500/20' },
+    ];
+    document.getElementById('summary-cards').innerHTML = cards.map(c => `
+        <div class="glass rounded-xl p-4 bg-gradient-to-br ${c.bg} border ${c.border} card-hover fade-in">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas ${c.icon} ${c.color} text-sm"></i>
+                <span class="text-xs text-slate-400">${c.label}</span>
+            </div>
+            <div class="text-lg sm:text-xl font-bold ${c.color} stat-number">${c.value}</div>
+        </div>
+    `).join('');
+}
+
+function renderConvergenceChart(conv) {
+    const ctx = document.getElementById('convergence-chart').getContext('2d');
+    if (convergenceChart) convergenceChart.destroy();
+    const labels = conv.best.map((_, i) => i + 1);
+    convergenceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Terbaik', data: conv.best, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.05)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                { label: 'Rata-rata', data: conv.avg, borderColor: '#f59e0b', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 1.5, borderDash: [4,4] },
+                { label: 'Terburuk', data: conv.worst, borderColor: '#f43f5e', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 1, borderDash: [2,3] },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10, family: 'Space Grotesk' }, boxWidth: 12 } } },
+            scales: {
+                x: { title: { display: true, text: 'Generasi', color: '#64748b', font: { size: 10 } }, ticks: { color: '#475569', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(148,163,184,0.04)' } },
+                y: { title: { display: true, text: 'Fitness (Rp)', color: '#64748b', font: { size: 10 } }, ticks: { color: '#475569', font: { size: 9 }, callback: v => formatRp(v) }, grid: { color: 'rgba(148,163,184,0.06)' } }
+            },
+            interaction: { intersect: false, mode: 'index' }
+        }
+    });
+}
+
+function renderACOChart(acoDetails) {
+    const ctx = document.getElementById('aco-chart').getContext('2d');
+    if (acoChart) acoChart.destroy();
+
+    const datasets = [];
+    const colors = { 1:'#22c55e', 2:'#3b82f6', 3:'#f59e0b', 4:'#f43f5e' };
+    let maxLen = 0;
+
+    Object.entries(acoDetails || {}).forEach(([mId, detail]) => {
+        if (!detail.iterations || detail.iterations.length === 0) return;
+        maxLen = Math.max(maxLen, detail.iterations.length);
+        datasets.push({
+            label: TRUCK_NAMES[mId] || ('Truk ' + mId),
+            data: detail.iterations.map(it => it.best_distance),
+            borderColor: colors[mId] || '#888',
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2,
+        });
+    });
+
+    if (datasets.length === 0) {
+        datasets.push({ label: 'Tidak ada data', data: [0], borderColor: '#475569', borderWidth: 1 });
+    }
+
+    const labels = Array.from({ length: maxLen }, (_, i) => i + 1);
+
+    acoChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10, family: 'Space Grotesk' }, boxWidth: 12 } } },
+            scales: {
+                x: { title: { display: true, text: 'Iterasi ACO', color: '#64748b', font: { size: 10 } }, ticks: { color: '#475569', font: { size: 9 } }, grid: { color: 'rgba(148,163,184,0.04)' } },
+                y: { title: { display: true, text: 'Jarak Terbaik (km)', color: '#64748b', font: { size: 10 } }, ticks: { color: '#475569', font: { size: 9 } }, grid: { color: 'rgba(148,163,184,0.06)' } }
+            },
+            interaction: { intersect: false, mode: 'index' }
+        }
+    });
+}
+
+function renderComparison(data) {
+    const pct = (a, b) => a !== 0 ? ((b - a) / Math.abs(a) * 100).toFixed(2) : '0.00';
+    const pctStr = (a, b) => {
+        const v = parseFloat(pct(a, b));
+        const sign = v >= 0 ? '+' : '';
+        return `${sign}${v}%`;
+    };
+
+    const rows = [
+        ['Fitness Terbaik', formatRp(data.initial_best_fitness), formatRp(data.final_best_fitness), pctStr(data.initial_best_fitness, data.final_best_fitness), data.final_best_fitness >= data.initial_best_fitness ? 'text-green-400' : 'text-rose-400'],
+        ['Pendapatan Kotor', formatRp(data.initial_total_revenue), formatRp(data.total_revenue), pctStr(data.initial_total_revenue, data.total_revenue), data.total_revenue >= data.initial_total_revenue ? 'text-green-400' : 'text-rose-400'],
+        ['Biaya BBM', formatRp(data.initial_fuel_cost), formatRp(data.total_fuel_cost), pctStr(data.initial_fuel_cost, data.total_fuel_cost), data.total_fuel_cost <= data.initial_fuel_cost ? 'text-green-400' : 'text-rose-400'],
+        ['Total Jarak', formatNum(data.initial_total_distance) + ' km', formatNum(data.total_distance) + ' km', pctStr(data.initial_total_distance, data.total_distance), data.total_distance <= data.initial_total_distance ? 'text-green-400' : 'text-rose-400'],
+    ];
+
+    document.getElementById('comparison-table').innerHTML = `
+        <table class="w-full text-xs">
+            <thead><tr class="text-slate-500 border-b border-slate-800/60">
+                <th class="text-left py-2 px-3">Metrik</th>
+                <th class="text-right py-2 px-3">Gen 0</th>
+                <th class="text-right py-2 px-3">Gen Akhir</th>
+                <th class="text-right py-2 px-3">Perubahan</th>
+            </tr></thead>
+            <tbody>${rows.map(r => `
+                <tr class="border-b border-slate-800/30">
+                    <td class="py-2 px-3 text-slate-300">${r[0]}</td>
+                    <td class="py-2 px-3 text-right text-slate-400">${r[1]}</td>
+                    <td class="py-2 px-3 text-right text-slate-200 font-medium">${r[2]}</td>
+                    <td class="py-2 px-3 text-right ${r[4]}">${r[3]}</td>
+                </tr>
+            `).join('')}</tbody>
+        </table>
+    `;
+}
+
+function renderTruckDetails(trucks) {
+    const container = document.getElementById('truck-details');
+    const truckClasses = { 1:'truck-jkt1', 2:'truck-jkt2', 3:'truck-sby1', 4:'truck-sby2' };
+
+    container.innerHTML = Object.entries(trucks).map(([mId, t]) => {
+        const weightPct = (t.total_weight / 1000 * 100).toFixed(0);
+        const volPct = (t.total_volume / 9000000 * 100).toFixed(1);
+        const hasItems = t.items && t.items.length > 0;
+
+        return `
+        <div class="glass rounded-2xl p-4 sm:p-5 fade-in ${truckClasses[mId] || ''}">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="truck-badge text-[10px] text-white font-bold px-2 py-0.5 rounded">${t.name}</span>
+                    <span class="text-xs text-slate-500">Gudang: ${t.origin}</span>
+                </div>
+                <span class="text-xs text-slate-500">${formatNum(t.distance)} km</span>
+            </div>
+
+            ${hasItems ? `
+                <!-- Route -->
+                <div class="glass-light rounded-lg px-3 py-2 mb-3">
+                    <div class="text-[10px] text-slate-500 mb-1">Rute Pengiriman</div>
+                    <div class="flex items-center gap-1 flex-wrap text-xs">
+                        ${t.route.map((city, i) => `
+                            <span class="text-slate-200 font-medium">${city}</span>
+                            ${i < t.route.length - 1 ? '<i class="fas fa-arrow-right text-[8px] text-slate-600"></i>' : ''}
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Capacity bars -->
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1">
+                            <span class="text-slate-500">Berat</span>
+                            <span class="text-slate-400">${t.total_weight} / 1.000 kg</span>
+                        </div>
+                        <div class="h-1.5 bg-surface-900 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all" style="width:${weightPct}%; background:var(--truck-color);"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1">
+                            <span class="text-slate-500">Volume</span>
+                            <span class="text-slate-400">${(t.total_volume/1e6).toFixed(1)} / 9.0 Jt cm³</span>
+                        </div>
+                        <div class="h-1.5 bg-surface-900 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all" style="width:${volPct}%; background:var(--truck-color); opacity:0.7;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items table -->
+                <div class="overflow-x-auto scroll-thin">
+                    <table class="w-full text-[10px]">
+                        <thead><tr class="text-slate-600 border-b border-slate-800/40">
+                            <th class="text-left py-1 px-1">Barang</th>
+                            <th class="text-right py-1 px-1">Berat</th>
+                            <th class="text-center py-1 px-1">Kat</th>
+                            <th class="text-right py-1 px-1">Tujuan</th>
+                            <th class="text-right py-1 px-1">Pendapatan</th>
+                        </tr></thead>
+                        <tbody>${t.items.map(item => `
+                            <tr class="border-b border-slate-800/20">
+                                <td class="py-1 px-1 text-slate-300 truncate max-w-[120px]">${item.name}</td>
+                                <td class="py-1 px-1 text-right text-slate-400">${item.weight} kg</td>
+                                <td class="py-1 px-1 text-center"><span class="px-1 rounded ${item.category===100?'text-green-400 bg-green-400/10':item.category===200?'text-amber-400 bg-amber-400/10':'text-rose-400 bg-rose-400/10'}">${item.cat_label}</span></td>
+                                <td class="py-1 px-1 text-right text-slate-400">${item.destination}</td>
+                                <td class="py-1 px-1 text-right text-slate-300">${formatRp(item.revenue)}</td>
+                            </tr>
+                        `).join('')}</tbody>
+                        <tfoot><tr class="font-medium">
+                            <td class="py-1.5 px-1 text-slate-300" colspan="4">Total</td>
+                            <td class="py-1.5 px-1 text-right text-slate-200">${formatRp(t.revenue)}</td>
+                        </tr></tfoot>
+                    </table>
+                </div>
+
+                <div class="flex justify-between mt-3 text-[10px]">
+                    <span class="text-slate-500">BBM: <span class="text-rose-400">${formatRp(t.fuel_cost)}</span></span>
+                    <span class="text-slate-500">Profit: <span class="text-green-400 font-medium">${formatRp(t.revenue - t.fuel_cost)}</span></span>
+                </div>
+            ` : `
+                <div class="text-center py-8 text-slate-600 text-sm">
+                    <i class="fas fa-box-open text-2xl mb-2"></i>
+                    <p>Tidak ada muatan</p>
+                </div>
+            `}
+        </div>
+        `;
+    }).join('');
+}
+
+function renderChromosome(chromosome, skipped) {
+    const container = document.getElementById('chromosome-display');
+    container.innerHTML = chromosome.map((gene, i) => `
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-600 border border-slate-700 text-xs text-slate-300 font-mono">${gene}</span>
+        ${i < chromosome.length - 1 ? '<i class="fas fa-chevron-right text-[8px] text-slate-700 self-center"></i>' : ''}
+    `).join('');
+
+    const skipEl = document.getElementById('skipped-info');
+    if (skipped && skipped.length > 0) {
+        skipEl.classList.remove('hidden');
+        skipEl.querySelector('span').textContent = `Barang tidak termuat (melebihi kapasitas): [${skipped.join(', ')}]`;
+    } else {
+        skipEl.classList.add('hidden');
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST NOTIFICATION
+// ═══════════════════════════════════════════════════════════
+function showToast(message, type = 'info') {
+    const colors = { success: 'border-green-500/40 bg-green-500/10', error: 'border-rose-500/40 bg-rose-500/10', info: 'border-blue-500/40 bg-blue-500/10' };
+    const icons = { success: 'fa-check-circle text-green-400', error: 'fa-exclamation-circle text-rose-400', info: 'fa-info-circle text-blue-400' };
+
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-[60] border ${colors[type]} backdrop-blur-lg rounded-xl px-4 py-3 flex items-center gap-3 max-w-sm shadow-2xl fade-in`;
+    toast.innerHTML = `<i class="fas ${icons[type]}"></i><span class="text-sm text-slate-200">${message}</span>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+</script>
+</body>
+</html>
