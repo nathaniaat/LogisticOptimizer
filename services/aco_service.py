@@ -13,7 +13,16 @@ class ACOService:
         self.Q = Q
         self.init_pheromone = init_pheromone
 
-    def solve(self, start_city, cities_to_visit):
+    def solve(self, start_city, cities_to_visit, return_to_start=True):
+        """
+        Mencari rute terbaik dari start_city mengunjungi semua cities_to_visit.
+        Jika return_to_start=True (default), truk akan kembali ke kota asal
+        (gudang) di akhir rute, dan jarak tempuh tersebut ikut dihitung dalam
+        total_distance. Ini merepresentasikan siklus pengiriman yang nyata:
+        truk berangkat dari gudang, mengantar semua barang, lalu pulang ke
+        gudang yang sama. Tanpa ini, biaya BBM yang dihitung akan lebih
+        rendah dari kenyataan karena jarak pulang tidak diperhitungkan.
+        """
         if not cities_to_visit:
             return {'route': [start_city], 'distance': 0, 'iterations': []}
             
@@ -39,6 +48,8 @@ class ACOService:
             
             for a in range(self.num_ants):
                 route = self._build_route(start_city, cities_to_visit, pheromone)
+                if return_to_start:
+                    route = route + [start_city]
                 distance = self._route_distance(route)
                 ant_routes.append(route)
                 ant_distances.append(distance)
@@ -54,7 +65,10 @@ class ACOService:
                     if pheromone[ci][cj] < 1e-10:
                         pheromone[ci][cj] = 1e-10
                         
-            # Deposisi feromon
+            # Deposisi feromon (termasuk edge pulang ke gudang, jika
+            # return_to_start aktif, sehingga ACO ikut "belajar" memilih
+            # kota terakhir yang dekat dengan gudang demi meminimalkan
+            # total jarak round-trip, bukan hanya jarak berangkat)
             for a in range(self.num_ants):
                 deposit = self.Q / max(ant_distances[a], 1)
                 route = ant_routes[a]

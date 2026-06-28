@@ -136,6 +136,8 @@ class GAService:
         ptr = {o: 0 for o in self.truck_pool.keys()}
         
         for bid in chromosome:
+            if bid not in self.items:
+                continue
             item = self.items[bid]
             asal = item['origin']
             pool = self.truck_pool.get(asal, [])
@@ -183,7 +185,7 @@ class GAService:
                 continue
                 
             asal_m = truck['origin']
-            dests = list(dict.fromkeys([self.items[bid]['destination'] for bid in muatan[m]]))
+            dests = list(dict.fromkeys([self.items[bid]['destination'] for bid in muatan[m] if bid in self.items]))
             
             aco_result = self._run_aco(asal_m, dests, final_aco)
             aco_details[m] = aco_result
@@ -198,6 +200,8 @@ class GAService:
             pend_m = 0
             item_details = []
             for bid in muatan[m]:
+                if bid not in self.items:
+                    continue
                 pend_m += self.revenues[bid]
                 it = self.items[bid]
                 item_details.append({
@@ -259,9 +263,12 @@ class GAService:
                 self.graph.get_distance_matrix(),
                 num_ants=20, max_iter=100, alpha=1.0, beta=2.0, rho=0.5, q0=0.7, Q=100, init_pheromone=0.1
             )
-            result = full_aco.solve(origin, dests)
+            # return_to_start=True: truk wajib kembali ke gudang asalnya
+            # sendiri setelah mengantar semua barang, sehingga jarak dan
+            # biaya BBM yang dihitung mencerminkan siklus pengiriman penuh
+            result = full_aco.solve(origin, dests, return_to_start=True)
         else:
-            result = self.aco.solve(origin, dests)
+            result = self.aco.solve(origin, dests, return_to_start=True)
             
         if not final:
             self.aco_cache[cache_key] = result
@@ -304,6 +311,12 @@ class GAService:
 
     def _order_crossover(self, p1, p2):
         n = len(p1)
+        # Order Crossover butuh minimal 4 gen untuk membentuk 2 titik potong
+        # yang valid (pt1 >= 1, pt2 <= n-2, pt1 < pt2). Dengan n < 4, kromosom
+        # terlalu pendek untuk dipotong dua kali, jadi anak hasil crossover
+        # diset sama dengan induknya (tidak ada crossover yang berarti).
+        if n < 4:
+            return p1[:], p2[:]
         pt1 = random.randint(1, n - 3)
         pt2 = random.randint(pt1 + 1, n - 2)
         
@@ -325,11 +338,28 @@ class GAService:
         return ox(p1, p2), ox(p2, p1)
 
     def _swap_mutation(self, chrom):
+        """
+        Order Changing (Swap Mutation) dengan mutation rate self.pm.
+        Setiap individu punya kesempatan melakukan beberapa kali swap acak
+        (bukan hanya satu kali), karena pada kromosom dengan banyak gen,
+        satu swap tunggal sering tidak mengubah partisi barang->truk sama
+        sekali (decode greedy tetap menghasilkan pengelompokan yang sama),
+        sehingga GA stagnan di solusi yang fenotipnya identik. Jumlah swap
+        di-skalakan dengan panjang kromosom agar eksplorasi tetap
+        proporsional pada kromosom kecil maupun besar.
+        """
         c = chrom[:]
-        if random.random() < self.pm:
-            i, j = random.sample(range(len(c)), 2)
-            c[i], c[j] = c[j], c[i]
+        n = len(c)
+        if n < 2:
+            return c
+
+        num_swaps = max(1, round(self.pm * n))
+        for _ in range(num_swaps):
+            if random.random() < self.pm:
+                i, j = random.sample(range(n), 2)
+                c[i], c[j] = c[j], c[i]
         return c
+
 
     def _new_generation(self, pop, fits):
         paired = list(zip(fits, pop))

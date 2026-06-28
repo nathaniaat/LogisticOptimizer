@@ -12,10 +12,26 @@ default_edges = [
     ["Solo",        "Surabaya",    260],
     ["Surabaya",    "Malang",       90],
     ["Semarang",    "Yogyakarta",   65],
-    ["Yogyakarta",  "Solo",         60],
+    ["Yogyakarta",  "Solo",         58],
     ["Jakarta",     "Bandung",     150],
     ["Bandung",     "Tasikmalaya", 105],
     ["Tasikmalaya", "Yogyakarta",  200],
+    # Tambahan kota agar jaringan jalan lebih realistis dan tidak hanya
+    # satu jalur linear -- memberi ACO lebih banyak pilihan rute untuk
+    # benar-benar dioptimasi, bukan sekadar satu-satunya jalur yang ada.
+    # Jarak dikalibrasi berdasarkan rute riil (BPS & data rute AKAP):
+    # Solo-Madiun (via Sragen-Ngawi) ~107km, Madiun-Kediri (via Nganjuk)
+    # ~75km, Madiun-Surabaya (via Mojokerto) ~150-170km tergantung rute.
+    ["Jakarta",     "Serang",       90],
+    ["Cirebon",     "Purwokerto",  130],
+    ["Purwokerto",  "Yogyakarta",  140],
+    ["Solo",        "Madiun",      107],
+    ["Madiun",      "Surabaya",    150],
+    ["Madiun",      "Kediri",       75],
+    ["Surabaya",    "Kediri",      130],
+    ["Kediri",      "Malang",       95],
+    ["Malang",      "Jember",      200],
+    ["Jember",      "Banyuwangi",  100],
 ]
 
 default_trucks = {
@@ -46,7 +62,13 @@ default_items = {
     18: {"name": "Kabel Listrik Rol",    "weight": 80,  "origin": "Jakarta",  "destination": "Tasikmalaya", "volume": 80000},
     19: {"name": "Cat Tembok Drum",      "weight": 300, "origin": "Jakarta",  "destination": "Cirebon",     "volume": 400000},
     20: {"name": "Pipa PVC Bundel",      "weight": 250, "origin": "Surabaya", "destination": "Solo",        "volume": 900000},
+    21: {"name": "Keramik Lantai",       "weight": 220, "origin": "Jakarta",  "destination": "Serang",      "volume": 600000},
+    22: {"name": "Mesin Jahit",          "weight": 90,  "origin": "Surabaya", "destination": "Kediri",      "volume": 350000},
+    23: {"name": "Karung Beras",         "weight": 400, "origin": "Surabaya", "destination": "Jember",      "volume": 1200000},
+    24: {"name": "Suku Cadang Truk",     "weight": 140, "origin": "Jakarta",  "destination": "Purwokerto",  "volume": 450000},
+    25: {"name": "Bibit Tembakau",       "weight": 70,  "origin": "Surabaya", "destination": "Madiun",      "volume": 200000},
 }
+
 
 @app.route('/')
 def index():
