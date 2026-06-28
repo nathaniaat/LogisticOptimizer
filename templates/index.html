@@ -153,79 +153,6 @@
                             </table>
                         </div>
                     </section>
-
-                    <!-- SECTION: Parameter -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- GA Params -->
-                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="fas fa-dna text-violet-400"></i>
-                                <h2 class="text-sm font-semibold text-white">Parameter GA</h2>
-                            </div>
-                            <div class="space-y-3 text-xs">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Populasi</label>
-                                    <input type="number" id="ga-pop" value="50" min="10" max="200" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Iterasi</label>
-                                    <input type="number" id="ga-iter" value="100" min="10" max="500" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Elitism</label>
-                                    <input type="number" id="ga-elite" value="2" min="1" max="10" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Crossover Rate</label>
-                                    <input type="number" id="ga-pc" value="0.8" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Mutation Rate</label>
-                                    <input type="number" id="ga-pm" value="0.2" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- ACO Params -->
-                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="fas fa-bug text-green-400"></i>
-                                <h2 class="text-sm font-semibold text-white">Parameter ACO</h2>
-                            </div>
-                            <div class="space-y-3 text-xs">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Jumlah Semut</label>
-                                    <input type="number" id="aco-ants" value="5" min="2" max="50" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Iterasi ACO</label>
-                                    <input type="number" id="aco-iter" value="15" min="5" max="200" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Alpha (feromon)</label>
-                                    <input type="number" id="aco-alpha" value="1.0" min="0" max="5" step="0.1" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Beta (jarak)</label>
-                                    <input type="number" id="aco-beta" value="2.0" min="0" max="5" step="0.1" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Rho (evaporasi)</label>
-                                    <input type="number" id="aco-rho" value="0.5" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">q0 (eksploitasi)</label>
-                                    <input type="number" id="aco-q0" value="0.7" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    <!-- RUN BUTTON -->
-                    <button id="run-btn" onclick="runOptimization()" class="w-full py-4 rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold text-sm tracking-wide transition-all glow-green flex items-center justify-center gap-2 active:scale-[0.98]">
-                        <i class="fas fa-play"></i>
-                        <span>Jalankan Optimasi</span>
-                    </button>
                 </div>
 
                 <!-- RIGHT COLUMN: Matriks Jarak -->
@@ -307,8 +234,84 @@
                 </div>
             </div>
 
+            <div class="space-y-6"></div>
+                <!-- SECTION: Parameter -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- GA Params -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-dna text-violet-400"></i>
+                            <h2 class="text-sm font-semibold text-white">Parameter GA</h2>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Populasi</label>
+                                <input type="number" id="ga-pop" value="50" min="10" max="200" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Iterasi</label>
+                                <input type="number" id="ga-iter" value="100" min="10" max="500" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Elitism</label>
+                                <input type="number" id="ga-elite" value="2" min="1" max="10" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Crossover Rate</label>
+                                <input type="number" id="ga-pc" value="0.8" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Mutation Rate</label>
+                                <input type="number" id="ga-pm" value="0.2" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ACO Params -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-bug text-green-400"></i>
+                            <h2 class="text-sm font-semibold text-white">Parameter ACO</h2>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Jumlah Semut</label>
+                                <input type="number" id="aco-ants" value="5" min="2" max="50" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Iterasi ACO</label>
+                                <input type="number" id="aco-iter" value="15" min="5" max="200" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Alpha (feromon)</label>
+                                <input type="number" id="aco-alpha" value="1.0" min="0" max="5" step="0.1" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Beta (jarak)</label>
+                                <input type="number" id="aco-beta" value="2.0" min="0" max="5" step="0.1" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Rho (evaporasi)</label>
+                                <input type="number" id="aco-rho" value="0.5" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">q0 (eksploitasi)</label>
+                                <input type="number" id="aco-q0" value="0.7" min="0" max="1" step="0.05" class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- RUN BUTTON -->
+                <button id="run-btn" onclick="runOptimization()" class="w-full py-4 rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold text-sm tracking-wide transition-all glow-green flex items-center justify-center gap-2 active:scale-[0.98]">
+                    <i class="fas fa-play"></i>
+                    <span>Jalankan Optimasi</span>
+                </button>
+            </div>
+
+
             <!-- RESULTS SECTION (hidden) -->
-            <div id="results-section" class="hidden space-y-6">
+            <div id="results-section" class="hidden space-y-6 mx-8">
                 <div class="border-t border-slate-800/60 pt-6">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
@@ -352,7 +355,7 @@
                     </section>
 
                     <!-- Truck Details -->
-                    <div id="truck-details" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"></div>
+                    <div id="truck-details" class="grid grid-cols-1 gap-6 mb-6"></div>
 
                     <!-- Chromosome Info -->
                     <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
@@ -774,7 +777,8 @@ async function runOptimization() {
 
         renderResults(result.data);
         showLoading(false);
-        showToast('Optimasi selesai! Profit: ' + formatRp(result.data.profit), 'success');
+        const tripInfo = result.data.total_trips > 1 ? ` · ${result.data.total_trips} Trip` : '';
+        showToast('Optimasi selesai! Profit: ' + formatRp(result.data.profit) + tripInfo, 'success');
 
         // Scroll ke hasil
         setTimeout(() => {
@@ -821,11 +825,140 @@ function renderResults(data) {
 
     renderSummaryCards(data);
     renderConvergenceChart(data.convergence);
-    renderACOChart(data.aco_details);
-    renderComparison(data);
-    renderTruckDetails(data.trucks);
-    renderChromosome(data.best_chromosome, data.skipped);
-    drawGraph(data.trucks);
+
+    if (data.multi_trip && data.trips && data.trips.length > 1) {
+        // Sembunyikan panel perbandingan + kromosom tunggal, tampilkan multi-trip
+        document.getElementById('comparison-table').closest('.glass') && (document.getElementById('comparison-table').closest('.glass').style.display = 'none');
+        renderMultiTripBadge(data.total_trips);
+        renderMultiTripDetails(data.trips);
+        renderACOChart(data.trips[0].aco_details);
+        drawGraph(data.trips[0].trucks);
+        renderChromosome(data.trips[0].best_chromosome, []);
+    } else {
+        const firstTrip = data.trips ? data.trips[0] : data;
+        renderACOChart(firstTrip.aco_details);
+        renderComparison(firstTrip);
+        renderTruckDetails(firstTrip.trucks);
+        renderChromosome(firstTrip.best_chromosome, firstTrip.skipped);
+        drawGraph(firstTrip.trucks);
+    }
+}
+
+function renderMultiTripBadge(totalTrips) {
+    // Tampilkan badge jumlah trip di atas section truck
+    const truckSection = document.getElementById('truck-details').parentElement;
+    const existing = document.getElementById('multi-trip-badge');
+    if (existing) existing.remove();
+    const badge = document.createElement('div');
+    badge.id = 'multi-trip-badge';
+    badge.className = 'flex items-center gap-2 mb-3';
+    badge.innerHTML = `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 text-xs font-medium">
+            <i class="fas fa-rotate text-[10px]"></i>
+            Multi Trip Aktif — ${totalTrips} Trip Dijalankan
+        </span>
+        <span class="text-xs text-slate-500">Semua barang berhasil dikirim</span>
+    `;
+    truckSection.insertBefore(badge, truckSection.firstChild);
+}
+
+function renderMultiTripDetails(trips) {
+    const container = document.getElementById('truck-details');
+    container.innerHTML = trips.map((trip, idx) => {
+        const tripNum = trip.trip_number || (idx + 1);
+        const truckCards = Object.entries(trip.trucks).map(([mId, t]) => {
+            if (!t.items || t.items.length === 0) return '';
+            const truckClasses = { 1:'truck-jkt1', 2:'truck-jkt2', 3:'truck-sby1', 4:'truck-sby2' };
+            const weightPct = (t.total_weight / 1000 * 100).toFixed(0);
+            const volPct = (t.total_volume / 9000000 * 100).toFixed(1);
+            return `
+            <div class="glass rounded-xl p-4 fade-in ${truckClasses[mId] || ''}">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="truck-badge text-[10px] text-white font-bold px-2 py-0.5 rounded">${t.name}</span>
+                        <span class="text-xs text-slate-500">Gudang: ${t.origin}</span>
+                    </div>
+                    <span class="text-xs text-slate-500">${formatNum(t.distance)} km</span>
+                </div>
+                <div class="glass-light rounded-lg px-3 py-1.5 mb-2">
+                    <div class="flex items-center gap-1 flex-wrap text-xs">
+                        ${t.route.map((city, i) => `
+                            <span class="text-slate-200 font-medium">${city}</span>
+                            ${i < t.route.length - 1 ? '<i class="fas fa-arrow-right text-[8px] text-slate-600"></i>' : ''}
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1">
+                            <span class="text-slate-500">Berat</span>
+                            <span class="text-slate-400">${t.total_weight} / 1.000 kg</span>
+                        </div>
+                        <div class="h-1.5 bg-surface-900 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full" style="width:${weightPct}%; background:var(--truck-color);"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1">
+                            <span class="text-slate-500">Volume</span>
+                            <span class="text-slate-400">${(t.total_volume/1e6).toFixed(1)} / 9.0 Jt cm³</span>
+                        </div>
+                        <div class="h-1.5 bg-surface-900 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full" style="width:${volPct}%; background:var(--truck-color); opacity:0.7;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto scroll-thin">
+                    <table class="w-full text-[10px]">
+                        <thead><tr class="text-slate-600 border-b border-slate-800/40">
+                            <th class="text-left py-1 px-1">Barang</th>
+                            <th class="text-right py-1 px-1">Berat</th>
+                            <th class="text-center py-1 px-1">Kat</th>
+                            <th class="text-right py-1 px-1">Tujuan</th>
+                            <th class="text-right py-1 px-1">Pendapatan</th>
+                        </tr></thead>
+                        <tbody>${t.items.map(item => `
+                            <tr class="border-b border-slate-800/20">
+                                <td class="py-1 px-1 text-slate-300 truncate max-w-[120px]">${item.name}</td>
+                                <td class="py-1 px-1 text-right text-slate-400">${item.weight} kg</td>
+                                <td class="py-1 px-1 text-center"><span class="px-1 rounded ${item.category===100?'text-green-400 bg-green-400/10':item.category===200?'text-amber-400 bg-amber-400/10':'text-rose-400 bg-rose-400/10'}">${item.cat_label}</span></td>
+                                <td class="py-1 px-1 text-right text-slate-400">${item.destination}</td>
+                                <td class="py-1 px-1 text-right text-slate-300">${formatRp(item.revenue)}</td>
+                            </tr>
+                        `).join('')}</tbody>
+                        <tfoot><tr class="font-medium">
+                            <td class="py-1.5 px-1 text-slate-300" colspan="4">Total</td>
+                            <td class="py-1.5 px-1 text-right text-slate-200">${formatRp(t.revenue)}</td>
+                        </tr></tfoot>
+                    </table>
+                </div>
+                <div class="flex justify-between mt-2 text-[10px]">
+                    <span class="text-slate-500">BBM: <span class="text-rose-400">${formatRp(t.fuel_cost)}</span></span>
+                    <span class="text-slate-500">Profit: <span class="text-green-400 font-medium">${formatRp(t.revenue - t.fuel_cost)}</span></span>
+                </div>
+            </div>`;
+        }).filter(Boolean).join('');
+
+        const carriedOver = trip.items_carried_over || [];
+        return `
+        <div class="mb-6">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25">
+                    <i class="fas fa-truck-fast text-indigo-400 text-xs"></i>
+                    <span class="text-sm font-bold text-indigo-300">Trip ${tripNum}</span>
+                </div>
+                <div class="text-xs text-slate-500 flex gap-3">
+                    <span><i class="fas fa-box text-slate-600 mr-1"></i>${trip.items_loaded ? trip.items_loaded.length : '?'} barang dimuat</span>
+                    <span class="text-green-400"><i class="fas fa-coins mr-1"></i>${formatRp(trip.profit)}</span>
+                </div>
+                ${carriedOver.length > 0 ? `<span class="text-[10px] text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20"><i class="fas fa-forward mr-1"></i>${carriedOver.length} barang → Trip ${tripNum+1}</span>` : `<span class="text-[10px] text-green-400/80 bg-green-400/10 px-2 py-0.5 rounded-full border border-green-400/20"><i class="fas fa-check mr-1"></i>Semua barang terangkut</span>`}
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                ${truckCards || '<div class="text-slate-600 text-sm col-span-4 text-center py-4">Tidak ada truk aktif</div>'}
+            </div>
+        </div>
+        `;
+    }).join('<div class="border-t border-slate-800/40 my-4"></div>');
 }
 
 function renderSummaryCards(data) {

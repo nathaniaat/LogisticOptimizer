@@ -45,7 +45,93 @@ class GAService:
         return 'Unknown'
 
     def run(self):
-        random.seed(98)
+        """
+        Menjalankan GA dengan strategi Multi Trip.
+        Barang yang tidak muat di Trip-N akan dimasukkan ke Trip-(N+1),
+        dan GA + ACO dijalankan ulang, hingga semua barang terangkut.
+        """
+        remaining_item_ids = list(self.items.keys())
+        all_trips = []
+        trip_number = 0
+        
+        total_revenue = 0.0
+        total_fuel_cost = 0.0
+        total_distance = 0.0
+        total_profit = 0.0
+        combined_convergence = {'best': [], 'avg': [], 'worst': []}
+
+        while remaining_item_ids:
+            trip_number += 1
+            trip_items = {iid: self.items[iid] for iid in remaining_item_ids}
+            
+            # Jalankan satu siklus GA untuk barang yang tersisa
+            trip_result = self._run_single_trip(trip_items, trip_number)
+            
+            # Barang yang berhasil dimuat di trip ini
+            loaded_ids = set()
+            for truck_detail in trip_result['trucks'].values():
+                for it in truck_detail['items']:
+                    loaded_ids.add(it['id'])
+            
+            # Barang sisa (skipped) → masuk trip berikutnya
+            next_remaining = [iid for iid in remaining_item_ids if iid not in loaded_ids]
+            
+            trip_result['trip_number'] = trip_number
+            trip_result['items_loaded'] = list(loaded_ids)
+            trip_result['items_carried_over'] = next_remaining
+            all_trips.append(trip_result)
+            
+            total_revenue   += trip_result['total_revenue']
+            total_fuel_cost += trip_result['total_fuel_cost']
+            total_distance  += trip_result['total_distance']
+            total_profit    += trip_result['profit']
+            
+            for key in combined_convergence:
+                combined_convergence[key].extend(trip_result['convergence'][key])
+            
+            # Jika tidak ada perubahan (tidak ada barang yang berhasil dimuat),
+            # hentikan untuk menghindari infinite loop
+            if not loaded_ids:
+                # Ini seharusnya tidak terjadi jika kapasitas truk valid,
+                # tapi sebagai safeguard: tandai sisa sebagai tidak bisa dikirim
+                break
+            
+            remaining_item_ids = next_remaining
+
+        return {
+            'multi_trip': True,
+            'total_trips': trip_number,
+            'trips': all_trips,
+            # Agregat keseluruhan
+            'total_revenue': round(total_revenue, 2),
+            'total_fuel_cost': round(total_fuel_cost, 2),
+            'total_distance': round(total_distance, 2),
+            'profit': round(total_profit, 2),
+            'convergence': combined_convergence,
+            # Untuk kompatibilitas backward dengan frontend lama
+            'trucks': all_trips[0]['trucks'] if all_trips else {},
+            'skipped': all_trips[-1]['items_carried_over'] if all_trips else [],
+            'best_chromosome': all_trips[0].get('best_chromosome', []),
+            'aco_details': all_trips[0].get('aco_details', {}),
+            'generations_run': sum(t.get('generations_run', 0) for t in all_trips),
+            'stopped_early': any(t.get('stopped_early', False) for t in all_trips),
+        }
+
+    def _run_single_trip(self, trip_items, trip_number):
+        """
+        Menjalankan satu siklus GA + ACO untuk sekumpulan barang.
+        Mengembalikan hasil satu trip termasuk truk dan barang yang skipped.
+        """
+        # Hitung ulang revenue untuk subset barang ini
+        old_items = self.items
+        old_revenues = self.revenues
+        self.items = trip_items
+        self.revenues = {}
+        for idx, item in trip_items.items():
+            d = self.graph.get_distance(item['origin'], item['destination'])
+            self.revenues[idx] = item['weight'] * d * item['category']
+        
+        random.seed(98 + trip_number)
         pop = self._init_population()
         fits = [self._decode(c)['fitness'] for c in pop]
         
@@ -94,8 +180,8 @@ class GAService:
         improvement_pct = 0
         if initial_best_fit != 0:
             improvement_pct = round((final_best_fit - initial_best_fit) / abs(initial_best_fit) * 100, 2)
-            
-        return {
+
+        result = {
             'best_chromosome': best_chrom,
             'initial_best_fitness': initial_best_fit,
             'initial_total_revenue': initial_best_detail['pendapatan'],
@@ -121,6 +207,12 @@ class GAService:
             'stagnation_at_stop': stagnant_cnt,
             'aco_details': final_trucks['aco_details']
         }
+        
+        # Restore state
+        self.items = old_items
+        self.revenues = old_revenues
+        
+        return result
 
     def _decode(self, chromosome):
         return self._decode_internal(chromosome, False)
@@ -136,6 +228,8 @@ class GAService:
         ptr = {o: 0 for o in self.truck_pool.keys()}
         
         for bid in chromosome:
+            if bid not in self.items:
+                continue
             item = self.items[bid]
             asal = item['origin']
             pool = self.truck_pool.get(asal, [])
@@ -183,7 +277,7 @@ class GAService:
                 continue
                 
             asal_m = truck['origin']
-            dests = list(dict.fromkeys([self.items[bid]['destination'] for bid in muatan[m]]))
+            dests = list(dict.fromkeys([self.items[bid]['destination'] for bid in muatan[m] if bid in self.items]))
             
             aco_result = self._run_aco(asal_m, dests, final_aco)
             aco_details[m] = aco_result
@@ -198,6 +292,8 @@ class GAService:
             pend_m = 0
             item_details = []
             for bid in muatan[m]:
+                if bid not in self.items:
+                    continue
                 pend_m += self.revenues[bid]
                 it = self.items[bid]
                 item_details.append({
@@ -304,6 +400,8 @@ class GAService:
 
     def _order_crossover(self, p1, p2):
         n = len(p1)
+        if n < 4:
+            return p1[:], p2[:]
         pt1 = random.randint(1, n - 3)
         pt2 = random.randint(pt1 + 1, n - 2)
         
