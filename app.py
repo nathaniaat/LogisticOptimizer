@@ -97,7 +97,8 @@ def optimize():
     data = request.json
     input_items = data.get('items', [])
     ga_params = data.get('ga', {})
-    aco_params = data.get('aco', {})
+    aco_ga_params = data.get('aco_ga', {})
+    aco_final_params = data.get('aco_final', {})
     
     items = {}
     for idx, item in enumerate(input_items):
@@ -117,23 +118,36 @@ def optimize():
         
     graph = GraphService(default_edges)
     
-    aco = ACOService(
+    aco_ga = ACOService(
         graph.get_distance_matrix(),
-        num_ants=int(aco_params.get('num_ants', 5)),
-        max_iter=int(aco_params.get('max_iter', 15)),
-        alpha=float(aco_params.get('alpha', 1.0)),
-        beta=float(aco_params.get('beta', 2.0)),
-        rho=float(aco_params.get('rho', 0.5)),
-        q0=float(aco_params.get('q0', 0.7)),
-        Q=float(aco_params.get('Q', 100)),
-        init_pheromone=float(aco_params.get('init_pheromone', 0.1))
+        num_ants=int(aco_ga_params.get('num_ants', 5)),
+        max_iter=int(aco_ga_params.get('max_iter', 15)),
+        alpha=float(aco_ga_params.get('alpha', 1.0)),
+        beta=float(aco_ga_params.get('beta', 2.0)),
+        rho=float(aco_ga_params.get('rho', 0.5)),
+        q0=float(aco_ga_params.get('q0', 0.7)),
+        Q=float(aco_ga_params.get('Q', 100)),
+        init_pheromone=float(aco_ga_params.get('init_pheromone', 0.1))
+    )
+
+    aco_final = ACOService(
+        graph.get_distance_matrix(),
+        num_ants=int(aco_final_params.get('num_ants', 20)),
+        max_iter=int(aco_final_params.get('max_iter', 50)),
+        alpha=float(aco_final_params.get('alpha', 1.0)),
+        beta=float(aco_final_params.get('beta', 2.0)),
+        rho=float(aco_final_params.get('rho', 0.5)),
+        q0=float(aco_final_params.get('q0', 0.7)),
+        Q=float(aco_final_params.get('Q', 100)),
+        init_pheromone=float(aco_final_params.get('init_pheromone', 0.1))
     )
     
     ga = GAService(
         items,
         default_trucks,
         graph,
-        aco,
+        aco=aco_ga,
+        aco_final=aco_final,
         cost_per_liter=6800,
         km_per_liter=4,
         pop_size=int(ga_params.get('pop_size', 50)),

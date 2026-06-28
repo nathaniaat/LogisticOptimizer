@@ -2,12 +2,13 @@ import random
 from services.aco_service import ACOService
 
 class GAService:
-    def __init__(self, items, trucks, graph, aco, cost_per_liter=6800, km_per_liter=4,
+    def __init__(self, items, trucks, graph, aco, aco_final=None, cost_per_liter=6800, km_per_liter=4,
                  pop_size=50, elite_size=2, pc=0.8, pm=0.2, n_iter=100, stagnation_limit=10, max_iter=300):
         self.items = items
         self.trucks = trucks
         self.graph = graph
         self.aco = aco
+        self.aco_final = aco_final or aco
         self.aco_cache = {}
         self.cost_per_liter = cost_per_liter
         self.km_per_liter = km_per_liter
@@ -259,22 +260,10 @@ class GAService:
             return self.aco_cache[cache_key]
             
         if final:
-            # Menggunakan murni parameter dari input website tanpa batasan
-            full_aco = ACOService(
-                self.graph.get_distance_matrix(),
-                num_ants=self.aco.num_ants, 
-                max_iter=self.aco.max_iter, 
-                alpha=self.aco.alpha, 
-                beta=self.aco.beta, 
-                rho=self.aco.rho, 
-                q0=self.aco.q0, 
-                Q=self.aco.Q, 
-                init_pheromone=self.aco.init_pheromone
-            )
             # return_to_start=True: truk wajib kembali ke gudang asalnya
             # sendiri setelah mengantar semua barang, sehingga jarak dan
             # biaya BBM yang dihitung mencerminkan siklus pengiriman penuh
-            result = full_aco.solve(origin, dests, return_to_start=True)
+            result = self.aco_final.solve(origin, dests, return_to_start=True)
         else:
             result = self.aco.solve(origin, dests, return_to_start=True)
             
