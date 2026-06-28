@@ -17,7 +17,7 @@ class GAService:
         self.pm = pm
         self.n_iter = n_iter
         self.stagnation_limit = stagnation_limit
-        self.max_iter = max(max_iter, n_iter)
+        self.max_iter = n_iter # Murni menggunakan input generasi tanpa ditimpa max_iter 300
         
         self.truck_pool = {}
         for t_id, t in self.trucks.items():
@@ -259,9 +259,17 @@ class GAService:
             return self.aco_cache[cache_key]
             
         if final:
+            # Menggunakan murni parameter dari input website tanpa batasan
             full_aco = ACOService(
                 self.graph.get_distance_matrix(),
-                num_ants=20, max_iter=100, alpha=1.0, beta=2.0, rho=0.5, q0=0.7, Q=100, init_pheromone=0.1
+                num_ants=self.aco.num_ants, 
+                max_iter=self.aco.max_iter, 
+                alpha=self.aco.alpha, 
+                beta=self.aco.beta, 
+                rho=self.aco.rho, 
+                q0=self.aco.q0, 
+                Q=self.aco.Q, 
+                init_pheromone=self.aco.init_pheromone
             )
             # return_to_start=True: truk wajib kembali ke gudang asalnya
             # sendiri setelah mengantar semua barang, sehingga jarak dan
