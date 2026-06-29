@@ -886,12 +886,14 @@
             // Truck routes
             if (truckRoutes) {
                 Object.entries(truckRoutes).forEach(([mId, data]) => {
-                    if (!data.route || data.route.length < 2) return;
+                    const routeToDraw = data.full_path || data.route;
+                    if (!routeToDraw || routeToDraw.length < 2) return;
+                    
                     const color = TRUCK_COLORS[mId] || '#888';
                     ctx.beginPath();
-                    ctx.moveTo(CITY_COORDS[data.route[0]].x, CITY_COORDS[data.route[0]].y);
-                    for (let i = 1; i < data.route.length; i++) {
-                        const p = CITY_COORDS[data.route[i]];
+                    ctx.moveTo(CITY_COORDS[routeToDraw[0]].x, CITY_COORDS[routeToDraw[0]].y);
+                    for (let i = 1; i < routeToDraw.length; i++) {
+                        const p = CITY_COORDS[routeToDraw[i]];
                         if (!p) continue;
                         ctx.lineTo(p.x, p.y);
                     }
@@ -902,8 +904,8 @@
                     ctx.globalAlpha = 1;
 
                     // Arrow di setiap segmen
-                    for (let i = 0; i < data.route.length - 1; i++) {
-                        const from = CITY_COORDS[data.route[i]], to = CITY_COORDS[data.route[i + 1]];
+                    for (let i = 0; i < routeToDraw.length - 1; i++) {
+                        const from = CITY_COORDS[routeToDraw[i]], to = CITY_COORDS[routeToDraw[i + 1]];
                         if (!from || !to) continue;
                         const angle = Math.atan2(to.y - from.y, to.x - from.x);
                         const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;

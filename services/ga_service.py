@@ -194,6 +194,15 @@ class GAService:
             rute = aco_result['route']
             jarak = aco_result['distance']
             
+            # Generate the detailed node-by-node path for the map
+            full_path = []
+            if len(rute) > 0:
+                full_path.append(rute[0])
+                for i in range(len(rute) - 1):
+                    segment_path = self.graph.get_path(rute[i], rute[i+1])
+                    if len(segment_path) > 1:
+                        full_path.extend(segment_path[1:])
+            
             jarak_mobil[m] = jarak
             rute_mobil[m] = rute
             total_jarak += jarak
@@ -226,6 +235,7 @@ class GAService:
                 'total_weight': berat_m[m],
                 'total_volume': vol_m[m],
                 'route': rute,
+                'full_path': full_path,
                 'distance': jarak,
                 'revenue': pend_m,
                 'fuel_cost': (jarak / self.km_per_liter) * self.cost_per_liter
