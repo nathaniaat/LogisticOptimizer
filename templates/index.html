@@ -361,137 +361,6 @@
                             </table>
                         </div>
                     </section>
-
-                    <!-- SECTION: Parameter -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- GA Params -->
-                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="fas fa-dna text-violet-400"></i>
-                                <h2 class="text-sm font-semibold text-white">
-                                    Parameter GA
-                                </h2>
-                            </div>
-                            <div class="space-y-3 text-xs">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Populasi</label>
-                                    <input type="number" id="ga-pop" value="50" min="10" max="200"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Iterasi</label>
-                                    <input type="number" id="ga-iter" value="100" min="10" max="500"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Elitism</label>
-                                    <input type="number" id="ga-elite" value="2" min="1" max="10"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Crossover Rate</label>
-                                    <input type="number" id="ga-pc" value="0.8" min="0" max="1" step="0.05"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Mutation Rate</label>
-                                    <input type="number" id="ga-pm" value="0.2" min="0" max="1" step="0.05"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- ACO Params (Iterasi GA) -->
-                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="fas fa-bug text-green-400"></i>
-                                <h2 class="text-sm font-semibold text-white">
-                                    Parameter ACO (Iterasi GA)
-                                </h2>
-                            </div>
-                            <div class="space-y-3 text-xs">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Jumlah Semut</label>
-                                    <input type="number" id="aco-ga-ants" value="5" min="1" max="50"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Iterasi ACO</label>
-                                    <input type="number" id="aco-ga-iter" value="15" min="5" max="200"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Alpha (feromon)</label>
-                                    <input type="number" id="aco-ga-alpha" value="1.0" min="0" max="5" step="0.1"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Beta (jarak)</label>
-                                    <input type="number" id="aco-ga-beta" value="2.0" min="0" max="5" step="0.1"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Rho (evaporasi)</label>
-                                    <input type="number" id="aco-ga-rho" value="0.5" min="0" max="1" step="0.05"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">q0 (eksploitasi)</label>
-                                    <input type="number" id="aco-ga-q0" value="0.7" min="0" max="1" step="0.05"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- ACO Params (Final) -->
-                        <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="fas fa-bug text-emerald-400"></i>
-                                <h2 class="text-sm font-semibold text-white">
-                                    Parameter ACO (Final)
-                                </h2>
-                            </div>
-                            <div class="space-y-3 text-xs">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Jumlah Semut</label>
-                                    <input type="number" id="aco-final-ants" value="20" min="2" max="50"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Iterasi ACO</label>
-                                    <input type="number" id="aco-final-iter" value="50" min="5" max="200"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Alpha (feromon)</label>
-                                    <input type="number" id="aco-final-alpha" value="1.0" min="0" max="5" step="0.1"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Beta (jarak)</label>
-                                    <input type="number" id="aco-final-beta" value="2.0" min="0" max="5" step="0.1"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">Rho (evaporasi)</label>
-                                    <input type="number" id="aco-final-rho" value="0.5" min="0" max="1" step="0.05"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <label class="text-slate-400">q0 (eksploitasi)</label>
-                                    <input type="number" id="aco-final-q0" value="0.7" min="0" max="1" step="0.05"
-                                        class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    <!-- RUN BUTTON -->
-                    <button id="run-btn" onclick="runOptimization()"
-                        class="w-full py-4 rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold text-sm tracking-wide transition-all glow-green flex items-center justify-center gap-2 active:scale-[0.98]">
-                        <i class="fas fa-play"></i>
-                        <span>Jalankan Optimasi</span>
-                    </button>
                 </div>
 
                 <!-- RIGHT COLUMN: Matriks Jarak -->
@@ -630,6 +499,145 @@
                         </div>
                     </section>
                 </div>
+            </div>
+
+            <!-- SECTION: Parameter -->
+            <div class="grid grid-cols-3 gap-6 space-y-6 items-start lg:space-y-0">
+                <div class="col-span-1 space-y-6 gap-6">
+                    <!-- GA Params -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-dna text-violet-400"></i>
+                            <h2 class="text-sm font-semibold text-white">
+                                Parameter GA
+                            </h2>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Populasi</label>
+                                <input type="number" id="ga-pop" value="50" min="10" max="200"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Iterasi</label>
+                                <input type="number" id="ga-iter" value="100" min="10" max="500"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Elitism</label>
+                                <input type="number" id="ga-elite" value="2" min="1" max="10"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Crossover Rate</label>
+                                <input type="number" id="ga-pc" value="0.8" min="0" max="1" step="0.05"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Mutation Rate</label>
+                                <input type="number" id="ga-pm" value="0.2" min="0" max="1" step="0.05"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-span-1 space-y-6 gap-6">
+                    <!-- ACO Params (Iterasi GA) -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-bug text-green-400"></i>
+                            <h2 class="text-sm font-semibold text-white">
+                                Parameter ACO (Iterasi GA)
+                            </h2>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Jumlah Semut</label>
+                                <input type="number" id="aco-ga-ants" value="5" min="1" max="50"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Iterasi ACO</label>
+                                <input type="number" id="aco-ga-iter" value="15" min="5" max="200"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Alpha (feromon)</label>
+                                <input type="number" id="aco-ga-alpha" value="1.0" min="0" max="5" step="0.1"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Beta (jarak)</label>
+                                <input type="number" id="aco-ga-beta" value="2.0" min="0" max="5" step="0.1"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Rho (evaporasi)</label>
+                                <input type="number" id="aco-ga-rho" value="0.5" min="0" max="1" step="0.05"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">q0 (eksploitasi)</label>
+                                <input type="number" id="aco-ga-q0" value="0.7" min="0" max="1" step="0.05"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-green-500/50" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-span-1 space-y-6 gap-6">
+                    <!-- ACO Params (Final) -->
+                    <section class="glass rounded-2xl p-4 sm:p-5 fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-bug text-emerald-400"></i>
+                            <h2 class="text-sm font-semibold text-white">
+                                Parameter ACO (Final)
+                            </h2>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Jumlah Semut</label>
+                                <input type="number" id="aco-final-ants" value="20" min="2" max="50"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Iterasi ACO</label>
+                                <input type="number" id="aco-final-iter" value="50" min="5" max="200"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Alpha (feromon)</label>
+                                <input type="number" id="aco-final-alpha" value="1.0" min="0" max="5" step="0.1"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Beta (jarak)</label>
+                                <input type="number" id="aco-final-beta" value="2.0" min="0" max="5" step="0.1"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">Rho (evaporasi)</label>
+                                <input type="number" id="aco-final-rho" value="0.5" min="0" max="1" step="0.05"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-slate-400">q0 (eksploitasi)</label>
+                                <input type="number" id="aco-final-q0" value="0.7" min="0" max="1" step="0.05"
+                                    class="w-20 bg-surface-600 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-slate-200 focus:outline-none focus:border-emerald-500/50" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- RUN BUTTON -->
+            <div class= "space-y-6 gap-6">
+                <button id="run-btn" onclick="runOptimization()"
+                    class="w-full py-4 rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold text-sm tracking-wide transition-all glow-green flex items-center justify-center gap-2 active:scale-[0.98]">
+                    <i class="fas fa-play"></i>
+                    <span>Jalankan Optimasi</span>
+                </button>
             </div>
 
             <!-- RESULTS SECTION (hidden) -->
