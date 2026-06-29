@@ -16,12 +16,6 @@ default_edges = [
     ["Jakarta",     "Bandung",     150],
     ["Bandung",     "Tasikmalaya", 105],
     ["Tasikmalaya", "Yogyakarta",  200],
-    # Tambahan kota agar jaringan jalan lebih realistis dan tidak hanya
-    # satu jalur linear -- memberi ACO lebih banyak pilihan rute untuk
-    # benar-benar dioptimasi, bukan sekadar satu-satunya jalur yang ada.
-    # Jarak dikalibrasi berdasarkan rute riil (BPS & data rute AKAP):
-    # Solo-Madiun (via Sragen-Ngawi) ~107km, Madiun-Kediri (via Nganjuk)
-    # ~75km, Madiun-Surabaya (via Mojokerto) ~150-170km tergantung rute.
     ["Jakarta",     "Serang",       90],
     ["Cirebon",     "Purwokerto",  130],
     ["Purwokerto",  "Yogyakarta",  140],

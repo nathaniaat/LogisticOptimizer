@@ -18,7 +18,7 @@ class GAService:
         self.pm = pm
         self.n_iter = n_iter
         self.stagnation_limit = stagnation_limit
-        self.max_iter = n_iter # Murni menggunakan input generasi tanpa ditimpa max_iter 300
+        self.max_iter = n_iter 
         
         self.truck_pool = {}
         for t_id, t in self.trucks.items():
@@ -270,9 +270,6 @@ class GAService:
             return self.aco_cache[cache_key]
             
         if final:
-            # return_to_start=True: truk wajib kembali ke gudang asalnya
-            # sendiri setelah mengantar semua barang, sehingga jarak dan
-            # biaya BBM yang dihitung mencerminkan siklus pengiriman penuh
             result = self.aco_final.solve(origin, dests, return_to_start=True)
         else:
             result = self.aco.solve(origin, dests, return_to_start=True)
@@ -318,10 +315,6 @@ class GAService:
 
     def _order_crossover(self, p1, p2):
         n = len(p1)
-        # Order Crossover butuh minimal 4 gen untuk membentuk 2 titik potong
-        # yang valid (pt1 >= 1, pt2 <= n-2, pt1 < pt2). Dengan n < 4, kromosom
-        # terlalu pendek untuk dipotong dua kali, jadi anak hasil crossover
-        # diset sama dengan induknya (tidak ada crossover yang berarti).
         if n < 4:
             return p1[:], p2[:]
         pt1 = random.randint(1, n - 3)
@@ -345,16 +338,6 @@ class GAService:
         return ox(p1, p2), ox(p2, p1)
 
     def _swap_mutation(self, chrom):
-        """
-        Order Changing (Swap Mutation) dengan mutation rate self.pm.
-        Setiap individu punya kesempatan melakukan beberapa kali swap acak
-        (bukan hanya satu kali), karena pada kromosom dengan banyak gen,
-        satu swap tunggal sering tidak mengubah partisi barang->truk sama
-        sekali (decode greedy tetap menghasilkan pengelompokan yang sama),
-        sehingga GA stagnan di solusi yang fenotipnya identik. Jumlah swap
-        di-skalakan dengan panjang kromosom agar eksplorasi tetap
-        proporsional pada kromosom kecil maupun besar.
-        """
         c = chrom[:]
         n = len(c)
         if n < 2:
