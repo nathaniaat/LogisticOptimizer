@@ -46,7 +46,7 @@ class GAService:
         return 'Unknown'
 
     def run(self):
-        random.seed(98)
+        # random.seed(98)
         pop = self._init_population()
         fits = [self._decode(c)['fitness'] for c in pop]
         
